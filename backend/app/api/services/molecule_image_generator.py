@@ -15,11 +15,6 @@ def generate_molecule_image_with_atom_ids(smiles: str) -> BytesIO:
     except rdchem.KekulizationError as e:
         raise ValueError(f"Kekulization failed: {str(e)}")
 
-    # # Add atom indices as atom map numbers for visualization
-    # for atom in mol.GetAtoms():
-    #     atom.SetProp("molAtomMapNumber", str(atom.GetIdx()))
-
-    # Draw image with RDKit's drawer
     drawer = rdMolDraw2D.MolDraw2DCairo(400, 400)
     drawer.drawOptions().addAtomIndices = True
     drawer.DrawMolecule(mol)

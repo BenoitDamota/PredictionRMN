@@ -4,9 +4,10 @@ from app.api.services.kekule_converter import convert_smiles_to_kekule
 from app.config import Config
 import time
 
-predict_bp = Blueprint('predict', __name__)
+predict_bp = Blueprint("predict", __name__)
 
-@predict_bp.route('/predict', methods=['POST'])
+
+@predict_bp.route("/predict", methods=["POST"])
 def predict():
     data = request.get_json()
 
@@ -25,10 +26,12 @@ def predict():
         kekule_smiles = convert_smiles_to_kekule(smiles)
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 400
-    except Exception:
-        return jsonify({"error": str(ve)}), 400
-    
-    payload = {key: value for key, value in data.items() if key not in ["smiles", "endpoint"]}
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    payload = {
+        key: value for key, value in data.items() if key not in ["smiles", "endpoint"]
+    }
     payload["smiles"] = kekule_smiles
 
     if endpoint.startswith("http://") or endpoint.startswith("https://"):
@@ -36,11 +39,13 @@ def predict():
     else:
         base_url = request.host_url.rstrip("/")
         target_url = f"{base_url}/{endpoint.lstrip('/')}"
-        
+
     time.sleep(5)
 
     try:
-        response = requests.post(target_url, json=payload, timeout=Config.PREDICTION_MODEL_TIMEOUT_IN_SECONDS)
+        response = requests.post(
+            target_url, json=payload, timeout=Config.PREDICTION_MODEL_TIMEOUT_IN_SECONDS
+        )
         response.raise_for_status()
         return jsonify(response.json()), 200
 

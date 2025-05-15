@@ -4,17 +4,18 @@ from app.config import Config
 from app.routes import main_routes
 from app.api import api_routes
 
+
 def create_app():
-    # Créer une instance de l'application Flask
+    # Create a flask instance
     app = Flask(__name__, static_folder=Config.STATIC_FOLDER)
-    
-    # Charger la configuration
+
+    # Load config
     app.config.from_object(Config)
 
-    CORS(app, origins=app.config['CORS_ORIGINS'])
-    
-    # Enregistrer les Blueprints
+    CORS(app, origins=app.config["CORS_ORIGINS"])
+
+    # Handle blueprints
     app.register_blueprint(main_routes)
-    app.register_blueprint(api_routes, url_prefix='/api')  # Le préfixe /api est important pour tes routes API
-    
+    app.register_blueprint(api_routes, url_prefix="/api")
+
     return app

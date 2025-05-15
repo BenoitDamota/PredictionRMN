@@ -2,15 +2,17 @@ import os
 import sys
 from platformdirs import user_config_dir
 
+
 class Config:
-    DEBUG = True
+    IS_FROZEN = getattr(sys, "frozen", False)
+    DEBUG = not IS_FROZEN
+
     CORS_ORIGINS = ["http://localhost:5173"]
 
-    # Gère le dossier static selon le mode (développement vs PyInstaller)
-    if getattr(sys, 'frozen', False):
-        STATIC_FOLDER = os.path.join(sys._MEIPASS, 'frontend', 'build')
+    if IS_FROZEN:
+        STATIC_FOLDER = os.path.join(sys._MEIPASS, "frontend", "build")
     else:
-        STATIC_FOLDER = os.path.join(os.path.dirname(__file__), '../../frontend/build')
+        STATIC_FOLDER = os.path.join(os.path.dirname(__file__), "../../frontend/build")
 
     APP_NAME = "PredictionRMN"
     APP_AUTHOR = "LERIA"
