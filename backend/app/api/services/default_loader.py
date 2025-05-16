@@ -11,7 +11,7 @@ def get_resource_path(relative_path):
     else:
         # Dev
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(current_dir, "..", "defaults", relative_path)
+        return os.path.join(current_dir, "..", "..", "defaults", relative_path)
 
 
 def load_default_json(filename):
