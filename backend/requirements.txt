@@ -5,3 +5,4 @@ requests==2.32.3
 platformdirs==4.3.6
 waitress==3.0.2
 pyinstaller==6.13.0
+jcamp==1.2.2
