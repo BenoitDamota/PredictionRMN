@@ -7,6 +7,7 @@ import shutil
 from waitress import serve
 from app import create_app
 import socket
+import os
 
 
 def find_free_port_auto():
@@ -15,10 +16,10 @@ def find_free_port_auto():
         return s.getsockname()[1]
 
 
-port = find_free_port_auto()
+dev_mode = "--devMode" in sys.argv
 
+port = 5000 if dev_mode else find_free_port_auto()
 URL = f"http://127.0.0.1:{port}"
-
 app = create_app()
 
 
@@ -27,22 +28,18 @@ def run_waitress():
 
 
 def open_browser():
-    webbrowser.open_new(URL)
+    if "--noBrowser" not in sys.argv:
+        webbrowser.open_new(URL)
+
+
+def get_script_path():
+    if getattr(sys, "frozen", False):
+        return sys.executable
+    return os.path.abspath(__file__)
 
 
 def open_console_and_wait():
-    # If running inside a terminal, just print messages and wait for user input
-    if sys.stdin.isatty():
-        print("Application started successfully.")
-        print(f"Please open your browser and go to {URL}")
-        print("(Press Ctrl+C or close this terminal to stop the server.)")
-        print("\n--- Server logs will appear below ---\n")
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            pass
-        return
+    script_path = get_script_path()
 
     if sys.platform.startswith("win"):
         cmd = [
@@ -51,11 +48,7 @@ def open_console_and_wait():
             "start",
             "cmd",
             "/k",
-            f"echo Application started successfully. && "
-            f"echo Please open your browser and go to {URL} && "
-            f"echo (Close this window to stop the server.) && "
-            f"echo. && "
-            f"echo --- Server logs will appear below ---",
+            f'"{sys.executable}" "{script_path}"',
         ]
         proc = subprocess.Popen(cmd)
         proc.wait()
@@ -79,48 +72,19 @@ def open_console_and_wait():
             input("Press Enter to exit...")
             return
 
-        message = (
-            'echo "Application started successfully."; '
-            f'echo "Please open your browser and go to {URL}"; '
-            'echo "(Close this window to stop the server.)"; '
-            'echo ""; '
-            'echo "--- Server logs will appear below ---"; '
-        )
+        cmd = []
+        bash_command = f'"{sys.executable}" "{script_path}"; exec bash'
 
         if terminal_cmd == "gnome-terminal":
-            cmd = [
-                terminal_cmd,
-                "--",
-                "bash",
-                "-c",
-                message + "exec bash",
-            ]
+            cmd = [terminal_cmd, "--", "bash", "-c", bash_command]
         elif terminal_cmd == "konsole":
-            cmd = [
-                terminal_cmd,
-                "-e",
-                f"bash -c '{message} exec bash'",
-            ]
+            cmd = [terminal_cmd, "-e", f"bash -c '{bash_command}'"]
         elif terminal_cmd == "xfce4-terminal":
-            cmd = [
-                terminal_cmd,
-                "--hold",
-                "-e",
-                f"bash -c '{message}'",
-            ]
+            cmd = [terminal_cmd, "--hold", "-e", f"bash -c '{bash_command}'"]
         elif terminal_cmd == "lxterminal":
-            cmd = [
-                terminal_cmd,
-                "-e",
-                f"bash -c '{message} exec bash'",
-            ]
-        else:
-            cmd = [
-                terminal_cmd,
-                "-hold",
-                "-e",
-                message + "bash",
-            ]
+            cmd = [terminal_cmd, "-e", f"bash -c '{bash_command}'"]
+        else:  # xterm or other fallback
+            cmd = [terminal_cmd, "-hold", "-e", f"bash -c '{bash_command}'"]
 
         proc = subprocess.Popen(cmd)
         proc.wait()
@@ -128,32 +92,38 @@ def open_console_and_wait():
     elif sys.platform == "darwin":
         script = f"""
             tell application "Terminal"
-                do script "echo Application started successfully.; echo Please open your browser and go to {URL}; echo Close this window to stop the server.; echo; echo --- Server logs will appear below ---; bash"
+                do script "{sys.executable} '{script_path}'"
                 activate
             end tell
         """
         proc = subprocess.Popen(["osascript", "-e", script])
         proc.wait()
-
     else:
         print("Unsupported OS for external console.")
         input("Press Enter to exit...")
 
 
 def main():
-    # Start Waitress server in a daemon thread
+    if not sys.stdin.isatty():
+        open_console_and_wait()
+        return
+
+    print("Application started successfully.")
+    print(f"Please open your browser and go to {URL}")
+    print("(Close this window to stop the server.)")
+    print("\n--- Server logs will appear below ---\n")
+
     server_thread = threading.Thread(target=run_waitress, daemon=True)
     server_thread.start()
 
-    # Open the default web browser to the app URL
     open_browser()
 
-    # Launch a console window with a startup message and wait for it to close
-    open_console_and_wait()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nShutting down server.")
 
-    print("Console closed, shutting down server...")
-
-    # Waitress lacks a stop() method, so exit the process to stop the server
     sys.exit(0)
 
 
