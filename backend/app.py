@@ -111,6 +111,17 @@ def main():
     print("Application started successfully.")
     print(f"Please open your browser and go to {URL}")
     print("(Close this window to stop the server.)")
+
+    if sys.platform.startswith("win"):
+        print("\n====== IMPORTANT NOTICE ======")
+        print(
+            "On Windows terminals, selecting text with the mouse will temporarily pause the application."
+        )
+        print(
+            "To resume, simply press Enter or right-click to copy, then press Enter again."
+        )
+        print("==============================\n")
+
     print("\n--- Server logs will appear below ---\n")
 
     server_thread = threading.Thread(target=run_waitress, daemon=True)
