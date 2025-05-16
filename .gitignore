@@ -19,7 +19,7 @@ pnpm-lock.yaml
 
 # Build outputs
 *.exe
-!app.exe
+!PredictionRMN.exe
 *.out
 *.app
 *.pyc
