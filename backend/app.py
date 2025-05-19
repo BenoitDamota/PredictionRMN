@@ -29,7 +29,7 @@ def run_waitress():
 
 def open_browser():
     if "--noBrowser" not in sys.argv:
-        webbrowser.open_new(URL)
+        webbrowser.open(URL, new=2)
 
 
 def get_script_path():
