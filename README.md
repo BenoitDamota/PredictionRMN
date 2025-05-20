@@ -84,8 +84,8 @@ dist/
 
 ## 📄 Documentation
 
-* [`docs/guide_utilisateur.md`](./docs/guide_utilisateur.md) – User Guide (FR)
-* [`docs/guide_dev.md`](./docs/guide_dev.md) – Developer Guide (FR)
+* [`docs/user_guide.md`](./docs/user_guide.md) – User Guide
+* [`docs/dev_guide.md`](./docs/dev_guide.md) – Developer Guide
 
 > These guides explain how to run, use, and modify the application.
 
