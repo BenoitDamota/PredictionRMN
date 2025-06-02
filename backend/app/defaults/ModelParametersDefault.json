@@ -1,16 +1,23 @@
 {
-  "currentModel": "",
+  "currentModel": "Simple Predictor",
   "models": [
     {
-      "modelName": "Dummy Predictor",
-      "endpoint": "/api/mockPredictionModel",
+      "modelName": "Simple Predictor",
+      "endpoint": "/api/simpleModelPrediction",
       "parameters": [
         {
           "key": "version",
           "label": "Version",
           "type": "number",
           "required": true,
-          "value": 1.0
+          "value": 0.1
+        },
+        {
+          "key": "type",
+          "label": "NMR Type",
+          "type": "text",
+          "required": true,
+          "value": "1H"
         }
       ]
     }

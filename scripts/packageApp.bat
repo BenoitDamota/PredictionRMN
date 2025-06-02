@@ -1,1 +1,1 @@
-pyinstaller --onefile --name PredictionRMN --icon favicon.ico --add-data "backend/app/defaults/*.json:defaults" --add-data "frontend/build:frontend/build" --add-data "backend/app/api/services/mock/mockSpectrum.json:mock" --exclude-module tkinter backend/app.py
+pyinstaller --onefile --name PredictionRMN --icon favicon.ico --add-data "backend/app/defaults/*.json:defaults" --add-data "frontend/build:frontend/build" --add-data "backend/app/models/simpleModel/H/trained_model_v3.pkl:app/models/simpleModel/H" --exclude-module tkinter backend/app.py
