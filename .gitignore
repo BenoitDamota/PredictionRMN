@@ -19,13 +19,13 @@ pnpm-lock.yaml
 
 # Build outputs
 *.exe
-!PredictionRMN.exe
 *.out
 *.app
 *.pyc
 *.pyo
 *.pyd
 __pycache__/
+dist/
 
 # PyInstaller output
 *.spec
