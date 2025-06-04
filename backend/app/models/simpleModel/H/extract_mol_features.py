@@ -8,7 +8,6 @@ def get_equivalent_H_groups(mol):
     try:
         Chem.Kekulize(mol, clearAromaticFlags=True)
     except:
-        # Si Kekulize échoue, on continue sans arrêt (mol peut rester aromatique)
         pass
 
     atom_to_H = defaultdict(list)
@@ -17,9 +16,6 @@ def get_equivalent_H_groups(mol):
             neighbor = atom.GetNeighbors()[0].GetIdx()
             atom_to_H[neighbor].append(atom.GetIdx())
     return atom_to_H
-
-
-from rdkit.Chem import rdMolDescriptors
 
 
 def extract_features_for_H_group(mol, heavy_idx, H_indices, groups):
@@ -35,18 +31,15 @@ def extract_features_for_H_group(mol, heavy_idx, H_indices, groups):
     except:
         charge = 0.0
 
-    # Utilisation de CanonicalRankAtoms pour la symétrie
     symmetry_classes = Chem.CanonicalRankAtoms(mol, breakTies=False)
-    in_symmetric_env = symmetry_classes[heavy_idx]  # même classe signifie symétrie
+    in_symmetric_env = symmetry_classes[heavy_idx]
 
-    # Nombre de voisins H par atome voisin
     neighbor_H_counts = []
     for nbr in neighbors:
         nbr_H = sum(1 for a in nbr.GetNeighbors() if a.GetAtomicNum() == 1)
         neighbor_H_counts.append(nbr_H)
     neighbor_H_counts_str = ",".join(map(str, neighbor_H_counts))
 
-    # Nombre de protons couplables (non équivalents à 2-3 liaisons)
     def is_non_equivalent_H(h_idx):
         for g_heavy, g_H in groups.items():
             if h_idx in g_H and g_heavy != heavy_idx:
@@ -62,7 +55,6 @@ def extract_features_for_H_group(mol, heavy_idx, H_indices, groups):
             if 2 <= len(dist) - 1 <= 3:
                 num_couplable_H_neighbors += 1
 
-    # Distance au proton non équivalent le plus proche
     distances = []
     for atom in mol.GetAtoms():
         if atom.GetAtomicNum() == 1 and is_non_equivalent_H(atom.GetIdx()):
@@ -72,7 +64,6 @@ def extract_features_for_H_group(mol, heavy_idx, H_indices, groups):
             distances.append(len(path) - 1)
     distance_to_nearest_non_equivalent_H = min(distances) if distances else -1
 
-    # Type de couplage (simplifié)
     if distance_to_nearest_non_equivalent_H == 2:
         H_coupling_type = "geminal"
     elif distance_to_nearest_non_equivalent_H == 3:
@@ -82,7 +73,6 @@ def extract_features_for_H_group(mol, heavy_idx, H_indices, groups):
     else:
         H_coupling_type = "none"
 
-    # Position structurale simple
     is_in_CH3 = heavy_atom.GetDegree() == 1 and len(H_indices) == 3
     is_in_CH2 = heavy_atom.GetDegree() == 2 and len(H_indices) == 2
     is_terminal_CH = heavy_atom.GetDegree() == 1 and len(H_indices) == 1

@@ -7,7 +7,6 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.compose import ColumnTransformer
 
 
-# Transformer pour neighbor_atomic_nums (stats)
 class NeighborAtomStats(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
@@ -28,7 +27,6 @@ class NeighborAtomStats(BaseEstimator, TransformerMixin):
         return np.array(stats)
 
 
-# Transformer pour neighbor_H_counts_per_atom (stats similaires)
 class NeighborHCountsStats(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
@@ -49,7 +47,6 @@ class NeighborHCountsStats(BaseEstimator, TransformerMixin):
         return np.array(stats)
 
 
-# Transformer pour H_coupling_type (catégoriel)
 class HCouplingTypeEncoder(BaseEstimator, TransformerMixin):
     def __init__(self):
         self.encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
@@ -69,14 +66,12 @@ def prepare_couplings(couplings_series):
     couplings_padded = []
     for c in couplings_series:
         c_list = c if isinstance(c, list) else []
-        # padding avec 0.0 si nécessaire
         c_list_padded = c_list[:MAX_COUPLINGS] + [0.0] * (MAX_COUPLINGS - len(c_list))
         couplings_padded.append(c_list_padded)
     return np.array(couplings_padded)
 
 
 def train_model(X_train, y_train):
-    # Colonnes numériques de base
     numeric_features = [
         "num_H",
         "heavy_atomic_num",
@@ -95,17 +90,13 @@ def train_model(X_train, y_train):
         "is_terminal_CH",
     ]
 
-    # Colonnes à stats
     neighbor_atomic_nums_feature = ["neighbor_atomic_nums"]
     neighbor_H_counts_feature = ["neighbor_H_counts_per_atom"]
 
-    # Colonnes catégorielles
     categorical_features = ["heavy_hybridization"]
 
-    # H_coupling_type (catégoriel avec encoding one-hot séparé)
     h_coupling_feature = X_train["H_coupling_type"]
 
-    # Pipeline préprocessing
     preprocessor = ColumnTransformer(
         transformers=[
             ("num", "passthrough", numeric_features),
@@ -115,27 +106,21 @@ def train_model(X_train, y_train):
         ]
     )
 
-    # Encoder multiplicity
     label_multiplicity = LabelEncoder()
     y_multiplicity = label_multiplicity.fit_transform(
         y_train["multiplicity"].fillna("None")
     )
 
-    # Préparation features
     X_num_cat = preprocessor.fit_transform(X_train)
 
-    # Encodage H_coupling_type (one-hot)
     h_coupling_enc = HCouplingTypeEncoder()
     h_coupling_enc.fit(h_coupling_feature)
     h_coupling_encoded = h_coupling_enc.transform(h_coupling_feature)
 
-    # Concaténation finale des features
     X_proc = np.hstack([X_num_cat, h_coupling_encoded])
 
-    # Préparer couplages
     y_couplings = prepare_couplings(y_train["couplings"])
 
-    # Modèles : ppm en régression et multiplicity en classification
     reg_ppm = RandomForestRegressor(n_estimators=100, random_state=42)
     clf_multiplicity = RandomForestClassifier(n_estimators=100, random_state=42)
     reg_couplings = MultiOutputRegressor(
@@ -209,7 +194,6 @@ def predict_associations(
     if not merge:
         return associations
 
-    # Fusion des associations proches (si ppm proches)
     merged = []
     associations = sorted(associations, key=lambda x: x["ppm"])
     if not associations:
@@ -226,7 +210,6 @@ def predict_associations(
             current["nb_atoms"] = total_nb
             current["atoms"].extend(assoc["atoms"])
 
-            # Choisir la multiplicité la plus complexe entre current et assoc
             if multiplicity_complexity(assoc["multiplicity"]) > multiplicity_complexity(
                 current["multiplicity"]
             ):

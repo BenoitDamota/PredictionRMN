@@ -4,7 +4,6 @@ from scipy.stats import norm
 
 
 def get_basic_pattern(m):
-    """Renvoie la liste d’intensités pour un multiplicateur de base ('s','d','t','q')."""
     patterns = {
         "s": [1],
         "d": [1, 1],
@@ -16,23 +15,17 @@ def get_basic_pattern(m):
 
 
 def get_subpeak_shifts(multiplicity, Js, center_ppm, spectrometer_freq=500.0):
-    """
-    multiplicity: chaîne comme 'd', 't', 'dt', 'ddd', 'qq', etc.
-    Js: liste des constantes de couplage
-    """
     if not multiplicity or not Js:
         return [center_ppm], [1]
 
     letters = list(multiplicity.lower())
 
-    # Si multiplicity a 1 lettre et plusieurs Js, on duplique la lettre pour correspondre
     if len(letters) == 1 and len(Js) > 1:
         letters = letters * len(Js)
 
     if len(Js) != len(letters):
         return [center_ppm], [1]
 
-    # Construire les shifts pour chaque lettre + J associé
     spacing_sets = []
     intensities_sets = []
 
@@ -40,23 +33,19 @@ def get_subpeak_shifts(multiplicity, Js, center_ppm, spectrometer_freq=500.0):
         base_pattern = get_basic_pattern(letter)
         base_pattern = np.array(base_pattern) / np.sum(base_pattern)
         n = len(base_pattern)
-        # shifts en Hz (espacement linéaire)
         shifts_hz = np.linspace(-J * (n - 1) / 2, J * (n - 1) / 2, n)
         spacing_sets.append(shifts_hz)
         intensities_sets.append(base_pattern)
 
-    # Combinaisons cartésiennes de shifts et intensités
     all_combinations = list(product(*[range(len(s)) for s in spacing_sets]))
 
     positions = []
     intensities = []
 
     for comb in all_combinations:
-        # somme des shifts correspondants
         pos_hz = sum(spacing_sets[i][idx] for i, idx in enumerate(comb))
         pos_ppm = pos_hz / spectrometer_freq + center_ppm
 
-        # produit des intensités
         inten = 1
         for i, idx in enumerate(comb):
             inten *= intensities_sets[i][idx]
@@ -64,7 +53,6 @@ def get_subpeak_shifts(multiplicity, Js, center_ppm, spectrometer_freq=500.0):
         positions.append(pos_ppm)
         intensities.append(inten)
 
-    # Normaliser intensités
     intensities = np.array(intensities)
     intensities /= intensities.sum()
 
@@ -88,9 +76,7 @@ def simulate_spectrum(associations, fwhm=0.004, ppm_range=(0, 10), resolution=64
             peak = nb_atoms * amp * norm.pdf(x, loc=pos, scale=fwhm / 2.355) * 5e4
             y += peak
             for i in range(len(x)):
-                if (
-                    peak[i] > 1e-3
-                ):  # Seuillage faible pour éviter d’ajouter des atomes sur des zones de bruit
+                if peak[i] > 1e-3:
                     atoms_ids[i].update(atom_ids)
 
     return x, y, atoms_ids
