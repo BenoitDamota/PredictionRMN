@@ -10,6 +10,7 @@ from app.models.simpleModel.utils.draw_peaks_and_spectrum import (
 import os
 from joblib import load
 import numpy as np
+from app.api.services.logger import log_with_time
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "trained_model_13c_v2.joblib")
@@ -19,13 +20,13 @@ model = load(MODEL_PATH)
 
 def predict(smiles):
     if not model:
-        return None
+        return {"error": "Error during the 1H prediction"}
 
     try:
         feats_df = extract_features_from_smiles(smiles)
         if feats_df.empty:
-            print("No C detected in this SMILES.")
-            raise Exception("No C detected in this SMILES.")
+            log_with_time("No C detected in this SMILES.")
+            return [{"ppm": 0, "intensity": 0, "atomID": []}]
 
         X_new = feats_df.drop(columns=["heavy_atom_idx"])
         if "neighbor_atomic_nums" in X_new.columns:
@@ -84,5 +85,5 @@ def predict(smiles):
         return spectrum_points
 
     except Exception as e:
-        print(f"Error during the processing of the SMILES: {e}")
-        return {error: e}
+        log_with_time(f"Error during the processing of the SMILES: {e}")
+        return {"error": "Error during the 1H prediction"}

@@ -12,7 +12,7 @@ def simpleModel_prediction():
     smiles = data.get("smiles")
 
     if not smiles:
-        return jsonify({"error": "Missing 'smiles' in simple prediction"}), 400
+        return jsonify({"error": "Missing 'smiles' in simple prediction"}), 200
 
     spectrum_type = "1H"
     log = "Simple Prediction Parameters:"
@@ -30,12 +30,20 @@ def simpleModel_prediction():
             spectrum = predict_13c(smiles)
         else:
             spectrum = predict_1h(smiles)
+
+        if isinstance(spectrum, dict) and "error" in spectrum:
+            return (
+                jsonify(spectrum),
+                200,
+            )
+
         if not spectrum:
-            raise Exception("No Model Founnd")
+            return jsonify({"error": "No spectrum returned"}), 200
+
     except Exception as e:
         return (
             jsonify({"error": f"Failed to predict simple model spectrum: {str(e)}"}),
-            500,
+            200,
         )
 
     return jsonify({"smiles": smiles, "spectrum": spectrum}), 200
