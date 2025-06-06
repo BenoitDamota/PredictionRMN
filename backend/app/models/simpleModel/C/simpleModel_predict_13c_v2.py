@@ -25,8 +25,8 @@ def predict(smiles):
     try:
         feats_df = extract_features_from_smiles(smiles)
         if feats_df.empty:
-            log_with_time("No C detected in this SMILES.")
-            return [{"ppm": 0, "intensity": 0, "atomID": []}]
+            log_with_time(f"No C detected in the SMILES : {smiles}")
+            return [{"ppm": 0, "intensity": 0, "atomID": []}, {"ppm": 250, "intensity": 0, "atomID": []}]
 
         X_new = feats_df.drop(columns=["heavy_atom_idx"])
         if "neighbor_atomic_nums" in X_new.columns:

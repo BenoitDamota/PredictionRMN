@@ -13,7 +13,13 @@ def guess_nmr_type(ppm, intensity):
 
 
 def detect_peaks(ppm, intensity, height_ratio=0.02, prominence=0.05, distance=5):
-    smoothed_intensity = savgol_filter(intensity, window_length=11, polyorder=3)
+    n = len(intensity)
+
+    window_length = min(11, n if n % 2 == 1 else n - 1)
+    if window_length < 3:
+        smoothed_intensity = intensity
+    else:
+        smoothed_intensity = savgol_filter(intensity, window_length=window_length, polyorder=3)
 
     max_height = np.max(smoothed_intensity)
     height_threshold = height_ratio * max_height
@@ -29,6 +35,9 @@ def detect_peaks(ppm, intensity, height_ratio=0.02, prominence=0.05, distance=5)
 
 
 def group_peaks_into_regions(ppm, peak_indices, delta_ppm):
+    if len(peak_indices) == 0:
+        return []
+
     peak_ppms = ppm[peak_indices]
     sorted_indices = np.argsort(peak_ppms)
     groups = []
