@@ -6,14 +6,13 @@ from app.models.simpleModel.H.draw_peaks_and_spectrum import (
     compress_spectrum_points_zero_segments,
 )
 import os
-import pickle
+from joblib import load
 import numpy as np
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "trained_model_v3.pkl")
+MODEL_PATH = os.path.join(BASE_DIR, "trained_model_1h_v3.joblib")
 
-with open(MODEL_PATH, "rb") as f:
-    model = pickle.load(f)
+model = load(MODEL_PATH)
 
 
 def predict(smiles):
