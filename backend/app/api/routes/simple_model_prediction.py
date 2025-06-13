@@ -27,18 +27,21 @@ def simpleModel_prediction():
 
     try:
         if spectrum_type == "13C":
-            spectrum = predict_13c(smiles)
+            result = predict_13c(smiles)
         else:
-            spectrum = predict_1h(smiles)
 
-        if isinstance(spectrum, dict) and "error" in spectrum:
-            return (
-                jsonify(spectrum),
-                200,
-            )
+            result = predict_1h(smiles)
+
+        if isinstance(result, dict) and "error" in result:
+            return jsonify(result), 200
+
+        spectrum = result.get("spectrum", [])
+        peaks_info = result.get("peaksInfos", [])
 
         if not spectrum:
-            return jsonify({"error": "No spectrum returned"}), 200
+            return jsonify({"error": "No spectrum predicted"}), 200
+
+        metadata = {"nucleusType": spectrum_type}
 
     except Exception as e:
         return (
@@ -46,4 +49,14 @@ def simpleModel_prediction():
             200,
         )
 
-    return jsonify({"smiles": smiles, "spectrum": spectrum}), 200
+    return (
+        jsonify(
+            {
+                "smiles": smiles,
+                "peaksInfos": peaks_info,
+                "spectrum": spectrum,
+                "metadata": metadata,
+            }
+        ),
+        200,
+    )

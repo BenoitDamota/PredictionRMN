@@ -47,7 +47,19 @@ def predict():
             target_url, json=payload, timeout=Config.PREDICTION_MODEL_TIMEOUT_IN_SECONDS
         )
         response.raise_for_status()
-        return jsonify(response.json()), 200
+        response_data = response.json()
+
+        checked_response = {
+            "smiles": response_data.get("smiles", smiles),
+            "peaksInfos": response_data.get("peaksInfos", []),
+            "spectrum": response_data.get("spectrum", []),
+            "metadata": response_data.get("metadata", {}),
+        }
+
+        if "nucleusType" not in checked_response["metadata"]:
+            checked_response["metadata"]["nucleusType"] = "Unknown"
+
+        return jsonify(checked_response), 200
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Prediction request failed: {str(e)}"}), 500
