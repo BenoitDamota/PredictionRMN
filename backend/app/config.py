@@ -20,13 +20,3 @@ class Config:
     APP_NAME = "PredictionRMN"
     APP_AUTHOR = "LERIA"
     PREDICTION_MODEL_TIMEOUT_IN_SECONDS = 300
-
-    @staticmethod
-    def get_user_settings_dir():
-        return user_config_dir(Config.APP_NAME, Config.APP_AUTHOR)
-
-    @staticmethod
-    def get_settings_file_path(filename):
-        settings_dir = Config.get_user_settings_dir()
-        os.makedirs(settings_dir, exist_ok=True)
-        return os.path.join(settings_dir, filename)

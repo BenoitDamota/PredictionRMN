@@ -10,18 +10,51 @@ import socket
 import os
 
 
-def find_free_port_auto():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("", 0))
-        return s.getsockname()[1]
-
-
 dev_mode = "--devMode" in sys.argv
 
-port = 5000 if dev_mode else find_free_port_auto()
+port = 5000 if dev_mode else 52586
 URL = f"http://127.0.0.1:{port}"
 app = create_app()
 
+def is_port_in_use(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
+def get_kill_instructions(port: int) -> str:
+    base_message = f"Unable to start the application. Port {port} is already in use.\n\n"
+
+    warning = (
+        "WARNING: Be very careful before killing a process. "
+        "The PID you choose might belong to another important application, "
+        "and terminating it could cause unwanted side effects.\n\n"
+    )
+
+    if sys.platform.startswith("win"):
+        instructions = (
+            "To identify the process:\n"
+            f"    netstat -ano | findstr :{port}\n\n"
+            "The correct PID is in the last column of the line where LISTENING is written.\n\n"
+            "To kill the process (replace X with the PID):\n"
+            "    taskkill /PID X /F\n"
+        )
+    elif sys.platform.startswith("linux"):
+        instructions = (
+            "To identify the process (look for the PID column associated with the port):\n"
+            f"    sudo lsof -i :{port}\n\n"
+            "To kill the process (replace X with the PID):\n"
+            "    sudo kill -9 X\n"
+        )
+    elif sys.platform.startswith("darwin"):
+        instructions = (
+            "To identify the process (look for the PID column associated with the port):\n"
+            f"    lsof -i :{port}\n\n"
+            "To kill the process (replace X with the PID):\n"
+            "    kill -9 X\n"
+        )
+    else:
+        return f"Unable to start the application. Port {port} is in use. Unknown operating system."
+
+    return base_message + warning + instructions
 
 def run_waitress():
     serve(app, host="0.0.0.0", port=port)
@@ -104,6 +137,10 @@ def open_console_and_wait():
 
 
 def main():
+    if is_port_in_use(port):
+        print(get_kill_instructions(port))
+        sys.exit(1)
+    
     if not sys.stdin.isatty():
         open_console_and_wait()
         return
