@@ -37,7 +37,7 @@ def predict():
     if endpoint.startswith("http://") or endpoint.startswith("https://"):
         target_url = endpoint
     else:
-        base_url = request.host_url.rstrip("/")
+        base_url = "http://127.0.0.1:52586"
         target_url = f"{base_url}/{endpoint.lstrip('/')}"
 
     try:
